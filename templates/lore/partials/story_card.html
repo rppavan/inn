@@ -1,0 +1,33 @@
+<div class="p-3 border rounded-lg flex justify-between items-start group" id="card-{{ card.id }}">
+    <div class="flex-1">
+        <div class="flex items-center space-x-2">
+            <span class="text-xs font-medium px-2 py-0.5 rounded
+                {% if card.type.value == 'character' %}bg-purple-100 text-purple-700
+                {% elif card.type.value == 'location' %}bg-green-100 text-green-700
+                {% elif card.type.value == 'item' %}bg-yellow-100 text-yellow-700
+                {% elif card.type.value == 'faction' %}bg-blue-100 text-blue-700
+                {% else %}bg-gray-100 text-gray-700{% endif %}">
+                {{ card.type.value }}
+            </span>
+            <span class="font-medium text-gray-800">{{ card.name }}</span>
+        </div>
+        {% if card.entry %}
+        <p class="text-sm text-gray-600 mt-1">{{ card.entry[:100] }}{% if card.entry|length > 100 %}...{% endif %}</p>
+        {% endif %}
+        {% if card.triggers %}
+        <div class="mt-1 flex flex-wrap gap-1">
+            {% for trigger in card.triggers %}
+            <span class="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">{{ trigger }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    <button
+        hx-delete="/lore/cards/{{ card.id }}"
+        hx-target="#card-{{ card.id }}"
+        hx-swap="outerHTML"
+        hx-confirm="Delete this story card?"
+        class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity ml-2">
+        &times;
+    </button>
+</div>

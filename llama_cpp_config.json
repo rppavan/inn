@@ -1,0 +1,26 @@
+{
+    "host": "0.0.0.0",
+    "port": 8080,
+    "models": [
+        {
+            "model": "/Users/Apparao.Parwatikar/Library/Caches/llama.cpp/mradermacher_Gemma2-Snowflakes-9B-GGUF_Gemma2-Snowflakes-9B.Q5_K_M.gguf",
+            "model_alias": "gemma-2-9b",
+            "chat_format": "chatml",
+            "n_gpu_layers": -1,
+            "offload_kqv": true,
+            "n_threads": 12,
+            "n_batch": 512,
+            "n_ctx": 16000
+        },
+        {
+            "model": "/Users/Apparao.Parwatikar/Library/Caches/llama.cpp/bartowski_p-e-w_Qwen3-4B-Instruct-2507-heretic-GGUF_p-e-w_Qwen3-4B-Instruct-2507-heretic-Q6_K_L.gguf",
+            "model_alias": "qwen3-4B",
+            "chat_format": "chatml",
+            "n_gpu_layers": -1,
+            "offload_kqv": true,
+            "n_threads": 12,
+            "n_batch": 512,
+            "n_ctx": 16000
+        }
+    ]
+}

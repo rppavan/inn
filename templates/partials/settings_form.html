@@ -1,0 +1,24 @@
+<div id="settings-form-container">
+    <form hx-post="/settings" hx-target="#settings-form-container" hx-swap="innerHTML">
+        <div class="mb-4">
+            <label for="model" class="block text-gray-700 font-bold mb-2">Model Name</label>
+            <input type="text" id="model" name="model" value="{{ model }}"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="e.g. gpt-3.5-turbo, ollama/llama2">
+            <p class="text-sm text-gray-500 mt-1">Enter the model name supported by LiteLLM.</p>
+        </div>
+        <div class="mb-4">
+            <label for="api_base" class="block text-gray-700 font-bold mb-2">API Base (Optional)</label>
+            <input type="text" id="api_base" name="api_base" value="{{ api_base }}"
+                class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                placeholder="e.g. http://localhost:11434">
+        </div>
+        <div class="flex items-center justify-between">
+            <button
+                class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                type="submit">
+                Save Settings
+            </button>
+        </div>
+    </form>
+</div>

@@ -1,0 +1,16 @@
+{% for event in adventure.history %}
+<div class="story-event">
+    {% if event.player_input and event.player_input != '[Adventure begins]' %}
+    <div class="mb-2">
+        <span class="text-xs font-medium text-indigo-600 uppercase">{{ event.action_type.value }}</span>
+        <p class="text-gray-700 italic">&gt; {{ event.player_input }}</p>
+    </div>
+    {% endif %}
+    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
+        {{ event.ai_response | safe }}
+    </div>
+</div>
+{% if not loop.last %}
+<hr class="border-gray-100">
+{% endif %}
+{% endfor %}

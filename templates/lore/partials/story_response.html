@@ -1,0 +1,10 @@
+<hr class="border-gray-100 my-4">
+<div class="story-event">
+    <div class="mb-2">
+        <span class="text-xs font-medium text-indigo-600 uppercase">{{ action_type }}</span>
+        <p class="text-gray-700 italic">&gt; {{ player_input }}</p>
+    </div>
+    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
+        {{ response | safe }}
+    </div>
+</div>

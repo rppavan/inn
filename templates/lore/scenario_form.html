@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="flex items-center mb-6">
+        <a href="/lore" class="text-gray-500 hover:text-gray-700 mr-4">&larr; Back</a>
+        <h1 class="text-2xl font-bold text-gray-800">
+            {% if scenario %}Edit Scenario{% else %}Create New Scenario{% endif %}
+        </h1>
+    </div>
+
+    <form
+        hx-post="{% if scenario %}/lore/scenarios/{{ scenario.id }}{% else %}/lore/scenarios{% endif %}"
+        hx-target="#form-result"
+        hx-swap="innerHTML"
+        class="space-y-6"
+    >
+        <!-- Basic Info -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Basic Information</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input type="text" name="title" required
+                        value="{{ scenario.title if scenario else '' }}"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter scenario title">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea name="description" rows="3"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Brief description of your scenario">{{ scenario.description if scenario else '' }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tags (comma-separated)</label>
+                    <input type="text" name="tags"
+                        value="{{ scenario.tags | join(', ') if scenario else '' }}"
+                        class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="fantasy, medieval, adventure">
+                </div>
+
+                {% if scenario %}
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select name="status" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500">
+                        <option value="draft" {% if scenario.status.value == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if scenario.status.value == 'published' %}selected{% endif %}>Published</option>
+                        <option value="unavailable" {% if scenario.status.value == 'unavailable' %}selected{% endif %}>Unavailable</option>
+                    </select>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Plot Settings -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4 text-gray-700">Plot Configuration</h2>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Opening Story</label>
+                    <textarea name="story" rows="4"
+                        class="w-full border rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="The initial story text that sets the scene...">{{ scenario.plot.story if scenario else '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">The initial narrative that starts the adventure.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">AI Instructions</label>
+                    <textarea name="ai_instructions" rows="3"
+                        class="w-full border rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Instructions for how the AI should behave...">{{ scenario.plot.ai_instructions if scenario else '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Guidelines for the AI narrator (tone, style, restrictions).</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Plot Essentials</label>
+                    <textarea name="plot_essentials" rows="3"
+                        class="w-full border rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Key plot points that must be maintained...">{{ scenario.plot.plot_essentials if scenario else '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">Core story elements the AI should preserve.</p>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Story Summary</label>
+                    <textarea name="story_summary" rows="2"
+                        class="w-full border rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Brief summary of events so far...">{{ scenario.plot.story_summary if scenario else '' }}</textarea>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Author's Note</label>
+                    <textarea name="authors_note" rows="2"
+                        class="w-full border rounded-lg px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-indigo-500"
+                        placeholder="Private note for the AI about style or tone...">{{ scenario.plot.authors_note if scenario else '' }}</textarea>
+                    <p class="text-xs text-gray-500 mt-1">A behind-the-scenes note to influence AI behavior.</p>
+                </div>
+
+                <div class="flex items-center">
+                    <input type="checkbox" name="third_person" id="third_person" value="true"
+                        {% if scenario and scenario.plot.third_person %}checked{% endif %}
+                        class="h-4 w-4 text-indigo-600 rounded">
+                    <label for="third_person" class="ml-2 text-sm text-gray-700">
+                        Use third person narration
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-end space-x-3">
+            <a href="/lore" class="px-4 py-2 border rounded-lg text-gray-700 hover:bg-gray-50">Cancel</a>
+            <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+                {% if scenario %}Save Changes{% else %}Create Scenario{% endif %}
+            </button>
+        </div>
+
+        <div id="form-result"></div>
+    </form>
+</div>
+{% endblock %}

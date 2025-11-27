@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Lore - Story Forge</h1>
+        <div class="space-x-2">
+            <a href="/lore/scenarios/new" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700">
+                + New Scenario
+            </a>
+            <a href="/lore/settings" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300">
+                Settings
+            </a>
+        </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6">
+        <!-- Scenarios Section -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Your Scenarios</h2>
+            {% if scenarios %}
+            <div class="space-y-3">
+                {% for scenario in scenarios %}
+                <a href="/lore/scenarios/{{ scenario.id }}" class="block p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-medium text-gray-800">{{ scenario.title }}</h3>
+                            <p class="text-sm text-gray-500 mt-1">{{ scenario.description[:100] }}{% if scenario.description|length > 100 %}...{% endif %}</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded
+                            {% if scenario.status.value == 'published' %}bg-green-100 text-green-700
+                            {% elif scenario.status.value == 'draft' %}bg-yellow-100 text-yellow-700
+                            {% else %}bg-gray-100 text-gray-700{% endif %}">
+                            {{ scenario.status.value }}
+                        </span>
+                    </div>
+                    {% if scenario.tags %}
+                    <div class="mt-2 flex flex-wrap gap-1">
+                        {% for tag in scenario.tags[:3] %}
+                        <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{{ tag }}</span>
+                        {% endfor %}
+                        {% if scenario.tags|length > 3 %}
+                        <span class="text-xs text-gray-400">+{{ scenario.tags|length - 3 }} more</span>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No scenarios yet. Create your first one!</p>
+            {% endif %}
+        </div>
+
+        <!-- Adventures Section -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4 text-gray-700">Active Adventures</h2>
+            {% if adventures %}
+            <div class="space-y-3">
+                {% for adventure in adventures %}
+                <a href="/lore/adventures/{{ adventure.id }}" class="block p-4 border rounded-lg hover:bg-gray-50 transition">
+                    <h3 class="font-medium text-gray-800">{{ adventure.title }}</h3>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {{ adventure.current_story_summary[:80] }}{% if adventure.current_story_summary|length > 80 %}...{% endif %}
+                    </p>
+                    <p class="text-xs text-gray-400 mt-2">
+                        Last played: {{ adventure.updated_at }}
+                    </p>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-gray-500 text-center py-8">No adventures yet. Start one from a scenario!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Info -->
+    <div class="mt-6 bg-indigo-50 rounded-lg p-4">
+        <h3 class="font-medium text-indigo-800 mb-2">Current LLM Configuration</h3>
+        <div class="text-sm text-indigo-600 grid md:grid-cols-3 gap-4">
+            <div>
+                <span class="text-indigo-400">Story Model:</span>
+                {{ settings.story_model }}
+            </div>
+            <div>
+                <span class="text-indigo-400">Character Model:</span>
+                {{ settings.character_model }}
+            </div>
+            <div>
+                <span class="text-indigo-400">API Base:</span>
+                {{ settings.api_base or 'Default' }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
