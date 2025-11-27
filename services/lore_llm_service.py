@@ -20,8 +20,8 @@ from services import lore_db_service as db
 # Lore-specific LLM settings
 lore_settings = {
     "api_base": "http://localhost:8080/v1",
-    "story_model": "gemma-3-12b-it",      # Model for story orchestration
-    "character_model": "gemma-3-12b-it",  # Model for character voices
+    "story_model": "qwen3-4B",      # Model for story orchestration
+    "character_model": "gemma-2-9b",  # Model for character voices
 }
 
 PROMPTS_DIR = Path(__file__).parent.parent / "prompts"
