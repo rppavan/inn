@@ -57,7 +57,7 @@ The application follows a layered FastAPI architecture with proper separation of
 The application uses LiteLLM (`litellm` package) to interact with LLM models:
 
 - Supports any OpenAI-compatible API endpoint (configured via `api_base` setting)
-- Default model: `gemma-3-12b-it` with local endpoint at `http://localhost:8080/v1`
+- Default model: `qwen3-4B` with local endpoint at `http://localhost:8080/v1`
 - When `api_base` is set, uses `custom_llm_provider="openai"` with `api_key="dummy"`
 - All LLM interaction logic is centralized in `services/llm_service.py`:
   - `get_chat_completion(message)`: Handles chat completion with configured model
@@ -131,8 +131,8 @@ Configuration in `services/lore_llm_service.py`:
 ```python
 lore_settings = {
     "api_base": "http://localhost:8080/v1",
-    "story_model": "gemma-3-12b-it",      # For orchestration
-    "character_model": "gemma-3-12b-it",  # For NPC voices
+    "story_model": "qwen3-4B",      # For orchestration
+    "character_model": "qwen3-4B",  # For NPC voices
 }
 ```
 

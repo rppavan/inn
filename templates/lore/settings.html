@@ -24,19 +24,15 @@
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Story Director Model</label>
-            <input type="text" name="story_model" required
-                value="{{ settings.story_model }}"
-                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
-                placeholder="gemma-3-12b-it">
+            <input type="text" name="story_model" required value="{{ settings.story_model }}"
+                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500" placeholder="qwen3-4B">
             <p class="text-xs text-gray-500 mt-1">Model used for story narration and world management</p>
         </div>
 
         <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Character Voice Model</label>
-            <input type="text" name="character_model" required
-                value="{{ settings.character_model }}"
-                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500"
-                placeholder="gemma-3-12b-it">
+            <input type="text" name="character_model" required value="{{ settings.character_model }}"
+                class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-indigo-500" placeholder="qwen3-4B">
             <p class="text-xs text-gray-500 mt-1">Model used for character dialogue and responses</p>
         </div>
 
