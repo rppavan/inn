@@ -1,7 +1,5 @@
 # inn
 
-A project created with FastAPI CLI.
-
 ## Quick Start
 
 ### Start the development server:
@@ -20,4 +18,3 @@ Visit http://localhost:8000
 ## Learn More
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com)
-- [FastAPI Cloud](https://fastapicloud.com)
