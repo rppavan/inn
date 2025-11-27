@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-4xl mx-auto">
+<div class="max-w-5xl mx-auto">
     <!-- Header -->
-    <div class="flex items-center justify-between mb-6">
+    <div class="flex items-center justify-between mb-4">
         <div class="flex items-center">
             <a href="/lore" class="text-gray-500 hover:text-gray-700 mr-4">&larr; Back</a>
             <div>
@@ -29,86 +29,233 @@
         </div>
     </div>
 
-    <!-- Story Display -->
-    <div class="bg-white rounded-lg shadow mb-6">
-        <div id="story-history" class="p-6 max-h-[60vh] overflow-y-auto space-y-4">
-            {% for event in adventure.history %}
-            <div class="story-event">
-                {% if event.player_input and event.player_input != '[Adventure begins]' %}
-                <div class="mb-2">
-                    <span class="text-xs font-medium text-indigo-600 uppercase">{{ event.action_type.value }}</span>
-                    <p class="text-gray-700 italic">&gt; {{ event.player_input }}</p>
+    <div class="grid grid-cols-4 gap-4">
+        <!-- Main Story Area (3 columns) -->
+        <div class="col-span-3">
+            <!-- Story Display -->
+            <div class="bg-white rounded-lg shadow mb-4">
+                <div id="story-history" class="p-6 max-h-[55vh] overflow-y-auto space-y-4">
+                    {% for event in adventure.history %}
+                    <div class="story-event">
+                        {% if event.actor_name and event.player_input and event.player_input != '[Adventure begins]' %}
+                        <div class="mb-2 bg-blue-50 p-2 rounded">
+                            <span class="text-xs font-medium text-blue-600 uppercase">{{ event.actor_name }} - {{ event.action_type.value }}</span>
+                            <p class="text-gray-700">&gt; {{ event.player_input }}</p>
+                        </div>
+                        {% endif %}
+                        {% if event.narration %}
+                        <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed italic">
+                            {{ event.narration | safe }}
+                        </div>
+                        {% endif %}
+                        {% for ca in event.character_actions %}
+                        <div class="mt-2 {% if ca.is_pc %}bg-green-50{% else %}bg-purple-50{% endif %} p-2 rounded">
+                            <span class="font-medium {% if ca.is_pc %}text-green-700{% else %}text-purple-700{% endif %}">{{ ca.character_name }}</span>
+                            {% if ca.action %}
+                            <span class="text-gray-600 italic">{{ ca.action }}</span>
+                            {% endif %}
+                            {% if ca.speech %}
+                            <p class="text-gray-800">"{{ ca.speech }}"</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if not loop.last %}
+                    <hr class="border-gray-100">
+                    {% endif %}
+                    {% endfor %}
+                </div>
+
+                <!-- Loading indicator -->
+                <div id="story-loading" class="hidden p-4 text-center text-gray-500">
+                    <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
+                    <p class="mt-2">The story unfolds...</p>
+                </div>
+            </div>
+
+            <!-- Action Input -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <form
+                    hx-post="/lore/adventures/{{ adventure.id }}/action"
+                    hx-target="#story-history"
+                    hx-swap="beforeend"
+                    hx-on::before-request="document.getElementById('story-loading').classList.remove('hidden')"
+                    hx-on::after-request="document.getElementById('story-loading').classList.add('hidden'); this.reset(); document.getElementById('story-history').scrollTop = document.getElementById('story-history').scrollHeight"
+                    class="space-y-3"
+                >
+                    <div class="flex space-x-2">
+                        <select name="actor_name" class="border rounded-lg px-2 py-2 bg-gray-50 text-sm">
+                            <option value="">Narrator</option>
+                            {% for pc in all_pcs %}
+                            <option value="{{ pc.name }}">{{ pc.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <select name="action_type" class="border rounded-lg px-2 py-2 bg-gray-50 text-sm">
+                            <option value="do">Do</option>
+                            <option value="say">Say</option>
+                            <option value="story">Story</option>
+                            <option value="do_say">Do & Say</option>
+                        </select>
+                        <input type="text" name="player_input" required
+                            class="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder="What happens next?" autofocus>
+                        <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
+                            Go
+                        </button>
+                    </div>
+
+                    <div class="text-xs text-gray-500">
+                        <span class="mr-3"><strong>Narrator:</strong> Describe events</span>
+                        <span class="mr-3"><strong>PC:</strong> Character action</span>
+                        <span class="mr-3"><strong>Do:</strong> Physical action</span>
+                        <span class="mr-3"><strong>Say:</strong> Dialogue</span>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Scene Sidebar (1 column) -->
+        <div class="col-span-1 space-y-4">
+            <!-- Current Scene -->
+            <div class="bg-white rounded-lg shadow p-4" id="scene-panel">
+                <h3 class="font-semibold text-gray-700 mb-2">Current Scene</h3>
+                {% if adventure.current_scene %}
+                <div class="text-sm space-y-2">
+                    {% if adventure.current_scene.location_name %}
+                    <div>
+                        <span class="text-gray-500">Location:</span>
+                        <span class="font-medium">{{ adventure.current_scene.location_name }}</span>
+                    </div>
+                    {% endif %}
+                    {% if adventure.current_scene.time_of_day %}
+                    <div>
+                        <span class="text-gray-500">Time:</span>
+                        {{ adventure.current_scene.time_of_day }}
+                    </div>
+                    {% endif %}
+                    {% if adventure.current_scene.mood %}
+                    <div>
+                        <span class="text-gray-500">Mood:</span>
+                        {{ adventure.current_scene.mood }}
+                    </div>
+                    {% endif %}
+                    {% if adventure.current_scene.situation %}
+                    <div class="text-gray-600 text-xs mt-2">
+                        {{ adventure.current_scene.situation }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% else %}
+                <p class="text-gray-500 text-sm">No scene set</p>
+                {% endif %}
+            </div>
+
+            <!-- Characters in Scene -->
+            <div class="bg-white rounded-lg shadow p-4">
+                <h3 class="font-semibold text-gray-700 mb-2">In Scene</h3>
+
+                {% if pcs_in_scene %}
+                <div class="mb-3">
+                    <div class="text-xs text-green-600 font-medium mb-1">Playing Characters</div>
+                    {% for pc in pcs_in_scene %}
+                    {% set state = character_states.get(pc.name) %}
+                    <details class="mb-1">
+                        <summary class="text-sm py-1 px-2 bg-green-50 rounded cursor-pointer hover:bg-green-100">
+                            <span class="font-medium">{{ pc.name }}</span>
+                            {% if state and state.current_mood %}
+                            <span class="text-xs text-gray-500">({{ state.current_mood }})</span>
+                            {% endif %}
+                        </summary>
+                        <div class="text-xs p-2 bg-green-25 border-l-2 border-green-200 ml-2 mt-1 space-y-1">
+                            {% if state %}
+                                {% if state.personality_traits %}
+                                <div><span class="text-gray-500">Traits:</span> {{ state.personality_traits | join(', ') }}</div>
+                                {% endif %}
+                                {% if state.current_goal %}
+                                <div><span class="text-gray-500">Goal:</span> {{ state.current_goal }}</div>
+                                {% endif %}
+                                {% if state.inventory %}
+                                <div><span class="text-gray-500">Items:</span>
+                                    {% for item in state.inventory[:4] %}
+                                    <span class="inline-block bg-gray-100 px-1 rounded">{{ item.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            {% else %}
+                            <div class="text-gray-400 italic">No detailed state</div>
+                            {% endif %}
+                        </div>
+                    </details>
+                    {% endfor %}
                 </div>
                 {% endif %}
-                <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-                    {{ event.ai_response | safe }}
+
+                {% if npcs_in_scene %}
+                <div>
+                    <div class="text-xs text-purple-600 font-medium mb-1">NPCs</div>
+                    {% for npc in npcs_in_scene %}
+                    {% set state = character_states.get(npc.name) %}
+                    <details class="mb-1">
+                        <summary class="text-sm py-1 px-2 bg-purple-50 rounded cursor-pointer hover:bg-purple-100">
+                            <span class="font-medium">{{ npc.name }}</span>
+                            {% if state and state.current_mood %}
+                            <span class="text-xs text-gray-500">({{ state.current_mood }})</span>
+                            {% endif %}
+                        </summary>
+                        <div class="text-xs p-2 bg-purple-25 border-l-2 border-purple-200 ml-2 mt-1 space-y-1">
+                            {% if state %}
+                                {% if state.personality_traits %}
+                                <div><span class="text-gray-500">Traits:</span> {{ state.personality_traits | join(', ') }}</div>
+                                {% endif %}
+                                {% if state.current_mood %}
+                                <div><span class="text-gray-500">Mood:</span> {{ state.current_mood }}</div>
+                                {% endif %}
+                                {% if state.current_goal %}
+                                <div><span class="text-gray-500">Goal:</span> {{ state.current_goal }}</div>
+                                {% endif %}
+                                {% if state.relationships %}
+                                <div><span class="text-gray-500">Relationships:</span>
+                                    {% for name, rel in state.relationships.items() %}
+                                    <span class="inline-block">{{ name }}: {{ rel.attitude }}</span>{% if not loop.last %}, {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                                {% if state.inventory %}
+                                <div><span class="text-gray-500">Items:</span>
+                                    {% for item in state.inventory[:4] %}
+                                    <span class="inline-block bg-gray-100 px-1 rounded">{{ item.name }}</span>
+                                    {% endfor %}
+                                </div>
+                                {% endif %}
+                            {% else %}
+                            <div class="text-gray-400 italic">No detailed state</div>
+                            {% endif %}
+                        </div>
+                    </details>
+                    {% endfor %}
                 </div>
-            </div>
-            {% if not loop.last %}
-            <hr class="border-gray-100">
-            {% endif %}
-            {% endfor %}
-        </div>
+                {% endif %}
 
-        <!-- Loading indicator -->
-        <div id="story-loading" class="hidden p-4 text-center text-gray-500">
-            <div class="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600"></div>
-            <p class="mt-2">The story unfolds...</p>
+                {% if not pcs_in_scene and not npcs_in_scene %}
+                <p class="text-gray-500 text-sm">No characters in scene</p>
+                {% endif %}
+            </div>
+
+            <!-- Story Summary (collapsible) -->
+            <details class="bg-gray-50 rounded-lg">
+                <summary class="p-3 cursor-pointer font-medium text-gray-700 text-sm hover:bg-gray-100 rounded-lg">
+                    Story Summary
+                </summary>
+                <div class="p-3 pt-0 text-xs text-gray-600">
+                    {{ adventure.current_story_summary or 'No summary yet.' }}
+                </div>
+            </details>
         </div>
     </div>
-
-    <!-- Action Input -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <form
-            hx-post="/lore/adventures/{{ adventure.id }}/action"
-            hx-target="#story-history"
-            hx-swap="beforeend"
-            hx-on::before-request="document.getElementById('story-loading').classList.remove('hidden')"
-            hx-on::after-request="document.getElementById('story-loading').classList.add('hidden'); this.reset(); document.getElementById('story-history').scrollTop = document.getElementById('story-history').scrollHeight"
-            class="space-y-4"
-        >
-            <div class="flex space-x-2">
-                <select name="action_type" class="border rounded-lg px-3 py-2 bg-gray-50">
-                    <option value="do">Do</option>
-                    <option value="say">Say</option>
-                    <option value="story">Story</option>
-                </select>
-                <input type="text" name="player_input" required
-                    class="flex-1 border rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                    placeholder="What do you do?" autofocus>
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700">
-                    Go
-                </button>
-            </div>
-
-            <div class="text-xs text-gray-500 flex space-x-4">
-                <span><strong>Do:</strong> Perform an action</span>
-                <span><strong>Say:</strong> Speak as your character</span>
-                <span><strong>Story:</strong> Narrate directly</span>
-            </div>
-        </form>
-    </div>
-
-    <!-- Story Summary (collapsible) -->
-    <details class="mt-6 bg-gray-50 rounded-lg">
-        <summary class="p-4 cursor-pointer font-medium text-gray-700 hover:bg-gray-100 rounded-lg">
-            Story Summary & Memory
-        </summary>
-        <div class="p-4 pt-0 space-y-3">
-            <div>
-                <h4 class="text-sm font-medium text-gray-500">Current Summary</h4>
-                <p class="text-sm text-gray-700">{{ adventure.current_story_summary or 'No summary yet.' }}</p>
-            </div>
-            <div>
-                <h4 class="text-sm font-medium text-gray-500">Memory</h4>
-                <p class="text-sm text-gray-700">{{ adventure.memory or 'No memory set.' }}</p>
-            </div>
-        </div>
-    </details>
 </div>
 
 <style>
-.prose p { margin-bottom: 0.75rem; }
+.prose p { margin-bottom: 0.5rem; }
 .prose p:last-child { margin-bottom: 0; }
 </style>
 {% endblock %}

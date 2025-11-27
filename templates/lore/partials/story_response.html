@@ -1,10 +1,36 @@
 <hr class="border-gray-100 my-4">
 <div class="story-event">
-    <div class="mb-2">
-        <span class="text-xs font-medium text-indigo-600 uppercase">{{ action_type }}</span>
-        <p class="text-gray-700 italic">&gt; {{ player_input }}</p>
+    {% if actor_name and player_input %}
+    <div class="mb-2 bg-blue-50 p-2 rounded">
+        <span class="text-xs font-medium text-blue-600 uppercase">{{ actor_name or 'Narrator' }} - {{ action_type }}</span>
+        <p class="text-gray-700">&gt; {{ player_input }}</p>
     </div>
-    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-        {{ response | safe }}
+    {% endif %}
+
+    {% if result.narration %}
+    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed italic">
+        {{ result.narration | safe }}
     </div>
+    {% endif %}
+
+    {% for ca in result.character_actions %}
+    <div class="mt-2 {% if ca.is_pc %}bg-green-50{% else %}bg-purple-50{% endif %} p-2 rounded">
+        <span class="font-medium {% if ca.is_pc %}text-green-700{% else %}text-purple-700{% endif %}">{{ ca.character_name }}</span>
+        {% if ca.action %}
+        <span class="text-gray-600 italic">{{ ca.action }}</span>
+        {% endif %}
+        {% if ca.speech %}
+        <p class="text-gray-800">"{{ ca.speech }}"</p>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    {% if result.pc_prompts %}
+    <div class="mt-3 bg-yellow-50 p-2 rounded border border-yellow-200">
+        <div class="text-xs font-medium text-yellow-700 mb-1">Awaiting Response:</div>
+        {% for prompt in result.pc_prompts %}
+        <div class="text-sm text-yellow-800">{{ prompt.character_name }}: {{ prompt.prompt }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
 </div>

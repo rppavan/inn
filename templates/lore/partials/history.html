@@ -1,14 +1,27 @@
 {% for event in adventure.history %}
 <div class="story-event">
-    {% if event.player_input and event.player_input != '[Adventure begins]' %}
-    <div class="mb-2">
-        <span class="text-xs font-medium text-indigo-600 uppercase">{{ event.action_type.value }}</span>
-        <p class="text-gray-700 italic">&gt; {{ event.player_input }}</p>
+    {% if event.actor_name and event.player_input and event.player_input != '[Adventure begins]' %}
+    <div class="mb-2 bg-blue-50 p-2 rounded">
+        <span class="text-xs font-medium text-blue-600 uppercase">{{ event.actor_name }} - {{ event.action_type.value }}</span>
+        <p class="text-gray-700">&gt; {{ event.player_input }}</p>
     </div>
     {% endif %}
-    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed">
-        {{ event.ai_response | safe }}
+    {% if event.narration %}
+    <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed italic">
+        {{ event.narration | safe }}
     </div>
+    {% endif %}
+    {% for ca in event.character_actions %}
+    <div class="mt-2 {% if ca.is_pc %}bg-green-50{% else %}bg-purple-50{% endif %} p-2 rounded">
+        <span class="font-medium {% if ca.is_pc %}text-green-700{% else %}text-purple-700{% endif %}">{{ ca.character_name }}</span>
+        {% if ca.action %}
+        <span class="text-gray-600 italic">{{ ca.action }}</span>
+        {% endif %}
+        {% if ca.speech %}
+        <p class="text-gray-800">"{{ ca.speech }}"</p>
+        {% endif %}
+    </div>
+    {% endfor %}
 </div>
 {% if not loop.last %}
 <hr class="border-gray-100">

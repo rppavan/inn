@@ -1,0 +1,12 @@
+<hr class="border-gray-100 my-4">
+<div class="story-event">
+    <div class="mt-2 bg-green-50 p-2 rounded">
+        <span class="font-medium text-green-700">{{ pc_action.character_name }}</span>
+        {% if pc_action.action %}
+        <span class="text-gray-600 italic">{{ pc_action.action }}</span>
+        {% endif %}
+        {% if pc_action.speech %}
+        <p class="text-gray-800">"{{ pc_action.speech }}"</p>
+        {% endif %}
+    </div>
+</div>

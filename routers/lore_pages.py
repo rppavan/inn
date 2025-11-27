@@ -206,11 +206,8 @@ async def start_adventure(request: Request, scenario_id: int, title: str = Form(
     try:
         adventure = db.create_adventure(scenario_id, title)
 
-        # Generate opening scene
-        opening = await llm.generate_opening_scene(adventure.id)
-
-        # Save as first event
-        db.add_event(adventure.id, ActionType.STORY, "[Adventure begins]", opening)
+        # Generate opening scene (now returns dict with narration, scene, etc.)
+        result = await llm.generate_opening_scene(adventure.id)
 
         # Get updated adventure
         adventure = db.get_adventure(adventure.id)
@@ -218,7 +215,7 @@ async def start_adventure(request: Request, scenario_id: int, title: str = Form(
         return templates.TemplateResponse("lore/partials/adventure_started.html", {
             "request": request,
             "adventure": adventure,
-            "opening": opening
+            "opening": result.get("narration", "")
         })
     except Exception as e:
         return templates.TemplateResponse("lore/partials/error.html", {
@@ -236,11 +233,25 @@ async def view_adventure(request: Request, adventure_id: int):
 
     scenario = db.get_scenario(adventure.scenario_id)
 
+    # Get characters in scene
+    chars_in_scene = db.get_characters_in_scene(adventure_id, scenario.id)
+
+    # Get all PCs for the actor selector
+    all_pcs = [c for c in scenario.story_cards if c.type == StoryCardType.PLAYING_CHARACTER]
+
+    # Get character states for all characters
+    character_states = db.list_character_states(adventure_id)
+    char_state_map = {cs.character_name: cs for cs in character_states}
+
     return templates.TemplateResponse("lore/adventure.html", {
         "request": request,
         "adventure": adventure,
         "scenario": scenario,
-        "action_types": [t.value for t in ActionType]
+        "pcs_in_scene": chars_in_scene.get("pcs", []),
+        "npcs_in_scene": chars_in_scene.get("npcs", []),
+        "all_pcs": all_pcs,
+        "action_types": [t.value for t in ActionType],
+        "character_states": char_state_map
     })
 
 
@@ -249,21 +260,56 @@ async def take_action(
     request: Request,
     adventure_id: int,
     player_input: str = Form(...),
-    action_type: str = Form("do")
+    action_type: str = Form("do"),
+    actor_name: str = Form("")
 ):
-    """Player takes an action in the adventure."""
+    """Player takes an action in the adventure (can be narrator or a PC)."""
     try:
-        response = await llm.continue_story(
+        result = await llm.continue_story(
             adventure_id,
             player_input,
-            ActionType(action_type)
+            ActionType(action_type),
+            actor_name=actor_name
         )
+
+        # Get updated adventure for scene info
+        adventure = db.get_adventure(adventure_id)
 
         return templates.TemplateResponse("lore/partials/story_response.html", {
             "request": request,
             "player_input": player_input,
             "action_type": action_type,
-            "response": response
+            "actor_name": actor_name,
+            "result": result,
+            "adventure": adventure
+        })
+    except Exception as e:
+        return templates.TemplateResponse("lore/partials/error.html", {
+            "request": request,
+            "error": str(e)
+        })
+
+
+@router.post("/adventures/{adventure_id}/pc-action", response_class=HTMLResponse)
+async def pc_action(
+    request: Request,
+    adventure_id: int,
+    pc_name: str = Form(...),
+    action: str = Form(""),
+    speech: str = Form("")
+):
+    """A playing character takes an action or says something."""
+    try:
+        pc_action = await llm.add_pc_action(
+            adventure_id,
+            pc_name,
+            action=action,
+            speech=speech
+        )
+
+        return templates.TemplateResponse("lore/partials/pc_action.html", {
+            "request": request,
+            "pc_action": pc_action
         })
     except Exception as e:
         return templates.TemplateResponse("lore/partials/error.html", {

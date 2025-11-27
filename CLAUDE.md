@@ -33,7 +33,7 @@ The application follows a layered FastAPI architecture with proper separation of
 - **state.py**: Global application state (in-memory settings for model configuration)
 - **database.py**: SQLite database initialization and connection management for Lore
 - **models/**: Data models
-  - **lore.py**: Lore entities (Scenario, Plot, StoryCard, Adventure, Event)
+  - **lore.py**: Lore entities (Scenario, Plot, StoryCard, Adventure, Event, Scene, CharacterState, CharacterAction)
 - **services/**: Business logic layer
   - **llm_service.py**: Chat LLM interaction and settings management
   - **lore_db_service.py**: Lore database CRUD operations
@@ -97,49 +97,121 @@ The Lore feature at `/lore` provides an AI Dungeon-style interactive story exper
 
 - **Scenario**: Blueprint for an adventure containing title, description, tags, plot configuration, and story cards
 - **Plot**: Initial story context including opening text, AI instructions, plot essentials, and author's note
-- **Story Card**: Contextual entities (characters, locations, items, factions) with trigger keywords that inject content when mentioned
-- **Adventure**: A playthrough instance of a scenario with event history
-- **Event**: A player action and AI response pair in the adventure history
+- **Story Card**: Contextual entities with trigger keywords:
+  - `pc` (Playing Character): User-controlled characters - AI never generates their dialogue
+  - `character` (NPC): AI-controlled characters with individual voice generation
+  - `location`, `item`, `faction`, `custom`: World-building elements
+- **Scene**: Current state tracking (location, characters present, mood, situation)
+- **Adventure**: A playthrough instance with scene state and event history
+- **Event**: Structured record with narration, character actions (do/say), and scene updates
+- **CharacterAction**: Structured response with action, speech, and optional inner thought
 
-### Dual-LLM Architecture
+### Multi-LLM Orchestration
 
-Lore uses two LLM roles (can be same or different models):
-- **Story Director**: Manages narrative, world-building, plot progression, and NPC behavior
-- **Character Voice**: Handles character dialogue and personality-driven responses
+The adventure loop uses multiple LLM calls:
 
-Configuration is in `services/lore_llm_service.py`:
+```
+Player Action (as PC or Narrator)
+        ↓
+[1] Story Orchestrator (story_model)
+    → Determines what happens in the world
+    → Outputs JSON: narration, scene_update, which NPCs respond
+        ↓
+[2] For each responding NPC:
+    Character Voice (character_model)
+    → Generates that NPC's action/speech in their voice
+        ↓
+[3] Combine into structured Event
+    → Save to database with scene updates
+```
+
+**Key distinction**: Playing Characters (PCs) are NEVER given AI-generated dialogue. The Story Orchestrator only determines world reactions to PC actions; users provide PC responses directly.
+
+Configuration in `services/lore_llm_service.py`:
 ```python
 lore_settings = {
     "api_base": "http://localhost:8080/v1",
-    "story_model": "gemma-3-12b-it",
-    "character_model": "gemma-3-12b-it",
+    "story_model": "gemma-3-12b-it",      # For orchestration
+    "character_model": "gemma-3-12b-it",  # For NPC voices
 }
 ```
 
 ### Prompt Templates
 
 Editable markdown files in `prompts/` directory:
-- `story_director.md`: System prompt for narrative management
-- `character_voice.md`: System prompt for character dialogue
-- `story_continuation.md`: Template for continuing stories based on player actions
+- `story_orchestrator.md`: JSON-output prompt for determining world state and NPC responses
+- `character_response.md`: JSON-output prompt for individual NPC dialogue/actions
+- `story_director.md`: Narrative prompt for opening scenes
 - `npc_creation.md`: Template for AI-generated character creation
 - `story_summary_update.md`: Template for summarizing story progress
-- `opening_scene.md`: Template for generating adventure openings
 
 ### Action Types
 
-Players interact using three action types:
-- **Do**: Perform an action ("I open the door")
-- **Say**: Speak as the character ("Hello, innkeeper!")
-- **Story**: Direct narration ("The sun sets over the mountains")
+- **Do**: Physical action ("opens the door")
+- **Say**: Dialogue ("Hello, innkeeper!")
+- **Story**: Direct narration (narrator mode)
+- **Do & Say**: Combined action and speech
+
+### Scene Tracking
+
+Each adventure maintains current scene state:
+- `location_name`, `location_description`: Where the scene takes place
+- `characters_present`: List of PC and NPC names currently in scene
+- `situation`: Brief description of what's happening
+- `mood`: Atmosphere (tense, relaxed, mysterious)
+- `time_of_day`, `weather`: Environmental context
+
+Scene updates happen automatically via `scene_update` in Story Orchestrator responses:
+- `characters_enter`: NPCs joining the scene
+- `characters_exit`: NPCs leaving the scene
+
+### Character State Tracking
+
+Each character (PC or NPC) has dynamic state tracked per adventure via `CharacterState`:
+
+**Personality** (used by Character Voice for consistent portrayal):
+- `personality_traits`: List of traits ("brave", "curious", "stubborn")
+- `values`: What they care about
+- `fears`: What worries them
+- `speech_style`: How they talk (formal, gruff, dialect)
+
+**Current State**:
+- `current_mood`: Emotional state (updates based on story events)
+- `current_goal`: Immediate objective
+- `long_term_goals`: Bigger aspirations
+
+**Inventory**:
+- `inventory`: Items carried `[{name, description, quantity}]`
+- `equipped`: Currently equipped item names
+
+**Relationships**:
+- `relationships`: `{character_name: {attitude, notes}}`
+
+**Stats** (optional, for game-like scenarios):
+- `stats`: Flexible dict like `{health: 100, mana: 50}`
+
+Character states are:
+- Initialized automatically when an adventure starts
+- Included in LLM context for authentic responses
+- Updated based on story orchestrator suggestions (mood changes)
+- Displayed in the adventure sidebar (expandable character cards)
+
+CRUD operations in `lore_db_service.py`:
+- `create_character_state()`, `get_character_state_by_name()`, `list_character_states()`
+- `update_character_mood()`, `update_character_goal()`
+- `add_item_to_character()`, `remove_item_from_character()`
+- `update_character_relationship()`
+- `get_character_action_history()` - retrieve past actions by specific character
 
 ### Database
 
 Lore uses SQLite (`lore.db`) with tables:
 - `scenarios`: Adventure blueprints
-- `story_cards`: Contextual entities linked to scenarios
-- `adventures`: Playthrough instances
-- `events`: Action/response history
+- `story_cards`: Characters (PCs/NPCs), locations, items
+- `adventures`: Playthrough instances with current_scene JSON
+- `scenes`: Scene history (optional)
+- `events`: Structured event history with narration and character_actions JSON
+- `character_states`: Per-adventure character state (personality, inventory, relationships)
 
 ### API Endpoints
 
@@ -148,7 +220,7 @@ REST API at `/api/lore`:
 - `GET/PUT/DELETE /scenarios/{id}` - Scenario CRUD
 - `POST /scenarios/{id}/cards` - Add story cards
 - `POST /scenarios/{id}/adventures` - Start new adventure
-- `GET /adventures/{id}` - Get adventure with history
-- `POST /adventures/{id}/action` - Take player action
+- `GET /adventures/{id}` - Get adventure with history and scene
+- `POST /adventures/{id}/action` - Take action (includes actor_name for PC/narrator)
 - `POST /adventures/{id}/undo` - Undo last action
 - `GET/PUT /settings` - Lore LLM configuration
