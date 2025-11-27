@@ -12,15 +12,6 @@ uv run fastapi dev
 
 Visit http://localhost:8000
 
-### Deploy to FastAPI Cloud:
-
-> Reader's note: These commands are not quite ready for prime time yet, but will be soon! Join the waiting list at https://fastapicloud.com!
-
-```bash
-uv run fastapi login
-uv run fastapi deploy
-```
-
 ## Project Structure
 
 - `main.py` - Your FastAPI application
