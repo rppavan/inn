@@ -1,22 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md flex flex-col h-[80vh]">
-    <div class="p-4 border-b">
-        <h2 class="text-xl font-bold">Chat with {{ model }}</h2>
+<div class="max-w-2xl mx-auto bg-gray-800 rounded-lg shadow-md flex flex-col h-[80vh] border border-gray-700">
+    <div class="p-4 border-b border-gray-700">
+        <h2 class="text-xl font-bold text-gray-100">Chat with {{ model }}</h2>
     </div>
     <div id="chat-history" class="flex-grow overflow-y-auto p-4 space-y-4">
         <!-- Chat messages will appear here -->
         <div class="text-center text-gray-500 text-sm">Start a conversation!</div>
     </div>
-    <div class="p-4 border-t">
+    <div class="p-4 border-t border-gray-700">
         <form hx-post="/chat" hx-target="#chat-history" hx-swap="beforeend" hx-on::after-request="this.reset()">
             <div class="flex space-x-2">
                 <input type="text" name="message" required
-                    class="flex-grow shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                    class="flex-grow shadow appearance-none border border-gray-600 rounded py-2 px-3 bg-gray-700 text-gray-100 leading-tight focus:outline-none focus:shadow-outline focus:border-amber-500 placeholder-gray-400"
                     placeholder="Type your message...">
                 <button
-                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                    class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline transition-colors"
                     type="submit">
                     Send
                 </button>

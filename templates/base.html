@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,17 +8,20 @@
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-    <nav class="bg-white shadow-sm p-4">
+
+<body class="bg-gray-900 text-gray-100 min-h-screen flex flex-col">
+    <nav class="bg-gray-800 shadow-sm p-4 border-b border-gray-700">
         <div class="container mx-auto flex justify-between items-center">
-            <a href="/chat" class="text-xl font-bold text-gray-800">AI Chat</a>
+            <a href="/chat" class="text-xl font-bold text-gray-100 hover:text-amber-500 transition-colors">AI Chat</a>
             <div class="space-x-4">
-                <a href="/chat" class="text-gray-600 hover:text-gray-900">Chat</a>
-                <a href="/lore" class="text-gray-600 hover:text-gray-900">Lore</a>
-                <a href="/settings" class="text-gray-600 hover:text-gray-900">Settings</a>
+                <a href="/chat" class="text-gray-300 hover:text-white transition-colors">Chat</a>
+                <a href="/lore" class="text-gray-300 hover:text-white transition-colors">Lore</a>
+                <a href="/settings" class="text-gray-300 hover:text-white transition-colors">Settings</a>
             </div>
         </div>
     </nav>
@@ -25,4 +29,5 @@
         {% block content %}{% endblock %}
     </main>
 </body>
+
 </html>
